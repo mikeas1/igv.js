@@ -1123,6 +1123,13 @@ div.ui-dialog fieldset {
     margin-left: 50px;
 }
 
+.igv-track-container-div {
+    position: relative;
+    left: 0;
+    right: 0;
+    overflow: hidden;
+}
+
 .igv-track-div {
     position: relative;
     width: 100%;
@@ -1142,8 +1149,12 @@ div.ui-dialog fieldset {
 }
 
 .igv-viewport-div {
+
+    float: left;
+
     position: relative;
     height: 100%;
+
     overflow-x: hidden;
     overflow-y: hidden;
 }
@@ -1203,12 +1214,7 @@ div.ui-dialog fieldset {
     /*display: none;*/
 }
 
-.igv-track-container-div {
-    position: relative;
-    left: 0;
-    right: 0;
-    overflow: hidden;
-}
+
 
 .igv-fa-vertical-center-shim {
     vertical-align: middle;
