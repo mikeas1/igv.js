@@ -1004,7 +1004,11 @@ var igv = (function (igv) {
 
     function attachTrackContainerMouseHandlers(trackContainerDiv) {
 
-        var isRulerTrack = false,
+        var $viewport,
+            viewport_id,
+            viewport,
+            referenceFrame,
+            isRulerTrack = false,
             isMouseDown = false,
             isDragging = false,
             lastMouseX = undefined,
@@ -1012,8 +1016,14 @@ var igv = (function (igv) {
 
         $(trackContainerDiv).mousedown(function (e) {
 
-            var coords = igv.translateMouseCoordinates(e, trackContainerDiv),
-                $target = $(e.target);
+            var coords,
+                $target;
+
+
+            $target = $(e.target);
+            if ($target.hasClass('igv-track-manipulation-handle')) {
+                return;
+            }
 
             if (igv.popover) {
                 igv.popover.hide();
@@ -1025,9 +1035,22 @@ var igv = (function (igv) {
                 return;
             }
 
+            $viewport = $target.parents('.igv-viewport-div');
+            viewport_id = $viewport.data('viewport');
+
+            _.each(igv.browser.trackViews, function(tv){
+                _.each(tv.viewports, function(vp) {
+                    if (viewport_id === vp.id) {
+                        viewport = vp;
+                    }
+                });
+            });
+
+            coords = igv.translateMouseCoordinates(e, $viewport.get(0));
+            referenceFrame = viewport.referenceFrame;
+
             isMouseDown = true;
-            lastMouseX = coords.x;
-            mouseDownX = lastMouseX;
+            mouseDownX = lastMouseX = coords.x;
         });
 
         // Guide line is bound within track area, and offset by 5 pixels so as not to interfere mouse clicks.
@@ -1045,25 +1068,23 @@ var igv = (function (igv) {
 
         $(trackContainerDiv).mousemove(igv.throttle(function (e) {
 
-            var coords = igv.translateMouseCoordinates(e, trackContainerDiv),
+            var coords,
                 maxEnd,
-                maxStart,
-                referenceFrame = igv.browser.referenceFrame;
+                maxStart;
 
             if (isRulerTrack) {
                 return;
             }
 
-            if (!referenceFrame) {
-                return;
+            if ($viewport) {
+                coords = igv.translateMouseCoordinates(e, $viewport.get(0));
             }
 
-            if (isMouseDown) { // Possibly dragging
+            if (referenceFrame && isMouseDown) { // Possibly dragging
 
                 if (mouseDownX && Math.abs(coords.x - mouseDownX) > igv.browser.constants.dragThreshold) {
 
                     if (igv.browser.loadInProgress()) {
-                        // ignore
                         return;
                     }
 
@@ -1077,13 +1098,13 @@ var igv = (function (igv) {
                     // clamp right
                     var chromosome = igv.browser.genome.getChromosome(referenceFrame.chr);
                     maxEnd = chromosome.bpLength;
-                    maxStart = maxEnd - igv.browser.trackViewportContainerWidth() * referenceFrame.bpPerPixel;
+                    maxStart = maxEnd - viewport.$viewport.width() * referenceFrame.bpPerPixel;
 
+                    if (referenceFrame.start > maxStart) {
+                        referenceFrame.start = maxStart;
+                    }
 
-                    if (referenceFrame.start > maxStart) referenceFrame.start = maxStart;
-
-                    igv.browser.updateLocusSearch(referenceFrame);
-
+                    // igv.browser.updateLocusSearch(referenceFrame);
 
                     igv.browser.repaint();
                     igv.browser.fireEvent('trackdrag');
@@ -1117,9 +1138,11 @@ var igv = (function (igv) {
                 isDragging = false;
             }
 
-            mouseDownX = undefined;
+            mouseDownX = lastMouseX = undefined;
             isMouseDown = false;
-            lastMouseX = undefined;
+            $viewport = viewport_id = viewport = undefined;
+            referenceFrame = undefined;
+
         }
 
     }
