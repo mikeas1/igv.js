@@ -537,7 +537,8 @@
     $(document).ready(function () {
         var div,
                 options,
-                browser;
+                browser,
+                $rulerSweeperTrack;
 
         div = $("#myDiv")[0];
         options = {
@@ -571,7 +572,9 @@
 
             ]
         };
+
         browser = igv.createBrowser(div, options);
+
     })
 
 
